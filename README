@@ -1,0 +1,160 @@
+NAME
+    cl.gs - Redis-based URL Shortener
+
+VERSION
+    0.001
+
+SYNOPSIS
+        use Dancer;
+        use clgs;
+        dance;
+
+DESCRIPTION
+    cl.gs is a small URL Shortener built on top of Redis and the Dancer
+    framework.
+
+    A word of caution: don't use this for anything other than a private
+    installation for personal use. Any publicly accessible URL shortener
+    should take proper security and anti-spam measures to prevent
+    shortlinking to malware sites, such as bot blocking captcha's, blacklist
+    checks, rate limiting, webcrawler policies, short url decoding
+    capabilities, etc.
+
+  Routes
+    GET /
+        Show form to encode a long url.
+
+    POST /
+        Encode a long url and show the results.
+
+    GET /:short_code
+        Redirect to the long url for this short code.
+
+    GET /:short_code+
+        Show traffic statistics for this short code.
+
+CONFIGURATION
+    Configuration can be achieved via a config.yml file or via the set
+    keyword. To use the config.yml approach, you will need to install YAML.
+    See the Dancer documentation for more information.
+
+    The only configurable setting is the cookie name, which defaults to
+    '__clgs'.
+
+    Example config.yml:
+
+        # Dancer specific config settings
+        logger: file
+        log: errors
+
+        clgs:
+            cookie: c3RhbXBzMQ
+
+    You can alternatively configure the server via the 'set' keyword in the
+    source code. This approach does not require a config file.
+
+        use Dancer;
+        use clgs;
+
+        # Dancer specific config settings
+        set logger      => 'file';
+        set log         => 'debug';
+        set show_errors => 1;
+
+        set clgs => {
+            cookie => 'c3RhbXBzMQ',
+        };
+
+        dance;
+
+DEPLOYMENT
+    Deployment is very flexible. It can be run on a web server via CGI or
+    FastCGI. It can also be run on any Plack web server. See
+    Dancer::Deployment for more details.
+
+  FastCGI
+    cl.gs can be run via FastCGI. This requires that you have the FCGI and
+    Plack modules installed. Here is an example FastCGI script. It assumes
+    your cl.gs server is in the file clgs.pl.
+
+        #!/usr/bin/env perl
+        use Dancer ':syntax';
+        use Plack::Handler::FCGI;
+
+        my $app = do "/path/to/clgs.pl";
+        my $server = Plack::Handler::FCGI->new(nproc => 5, detach => 1);
+        $server->run($app);
+
+    Here is an example lighttpd config. It assumes you named the above file
+    clgs.fcgi.
+
+        fastcgi.server += (
+            "/" => ((
+                "socket" => "/tmp/fcgi.sock",
+                "check-local" => "disable",
+                "bin-path" => "/path/to/clgs.fcgi",
+            )),
+        )
+
+    Now cl.gs will be running via FastCGI under /.
+
+  Plack
+    cl.gs can be run with any Plack web server. Just run:
+
+        plackup clgs.pl
+
+    You can change the Plack web server via the -s option to plackup.
+
+CONTRIBUTING
+    This module is developed on Github at:
+
+    <https://github.com/sitetechie/cl.gs>
+
+    Feel free to fork the repo and submit pull requests!
+
+      git clone https://github.com/sitetechie/cl.gs
+
+SUPPORT
+  Perldoc
+    You can find documentation for this module with the perldoc command.
+
+      perldoc clgs
+
+  Website
+    <http://cl.gs>
+
+  Email
+    You can email the author of this module at "SITETECH at cpan.org" asking
+    for help with any problems you have.
+
+AUTHOR
+    Peter de Vos <techie@sitetechie.com>
+
+COPYRIGHT AND LICENSE
+    This software is copyright (c) 2012 by Site Corporation.
+
+    This module is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself. See perlartistic.
+
+DISCLAIMER OF WARRANTY
+    BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+    FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
+    OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+    PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+    EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
+    ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
+    YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
+    NECESSARY SERVICING, REPAIR, OR CORRECTION.
+
+    IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+    WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
+    REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE LIABLE
+    TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL, OR
+    CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THE
+    SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
+    RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
+    FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
+    SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+    DAMAGES.
+

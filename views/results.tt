@@ -1,0 +1,3 @@
+<div class="reskey">Your URL</div><div class="resvalue"><a href="[% url %]">[% url %]</a></div>
+<div class="reskey">Short URL</div><div class="resvalue"><a href="[% short_url %]">[% short_url %]</a></div>
+<div class="reskey">Stats URL</div><div class="resvalue"><a href="[% stats_url %]">[% stats_url %]</a></div>

@@ -1,0 +1,14 @@
+# redis> flushdb
+
+use strict;
+use Redis;
+use Data::Dumper;
+my $redis = Redis->new(encoding => undef);
+my %k = $redis->keys('*');
+
+foreach my $key(keys %k) {
+#warn Dumper $key;
+#last;
+  warn "KEY $key";
+  $redis->del("$key") || warn "key doesn't exist";
+}

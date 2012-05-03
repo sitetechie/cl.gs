@@ -1,0 +1,8 @@
+      <form action="/" method="post">
+        <div>
+          <input type="url" id="uri" name="url" required="required" maxlength="500" autocomplete="off" autofocus="autofocus" placeholder="http://example.com" />
+        </div>
+      </form>
+      <div id="results" class="results"></div>
+      [% error %]
+

@@ -1,0 +1,26 @@
+appname: "cl.gs"
+# use nginx to proxy-forward from port 80
+port: 3004
+layout  : "main"
+charset : "UTF-8"
+template: "template_toolkit"
+engines :
+  template_toolkit:
+    encoding : 'utf8'
+    start_tag: '[%'
+    end_tag  : '%]'
+
+cl.gs:
+   cookie: "__clgs"
+
+plugins:
+    Redis:
+        server: '127.0.0.1:6379'
+        debug: 0
+        encoding: utf8
+        #connection_check_threshold: 30
+        connections:
+            test:
+                server: '127.0.0.1:6380'
+                debug: 1
+                encoding: utf8

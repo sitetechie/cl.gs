@@ -1,0 +1,5 @@
+<div class="results">
+<pre>
+[% USE Dumper; Dumper.dump(stats) %]
+</pre>
+</div>

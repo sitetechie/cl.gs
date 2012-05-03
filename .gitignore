@@ -1,3 +1,7 @@
+.*
+!.empty
+!.gitignore
+Debian_CPANTS.txt
 blib/
 .build/
 _build/
@@ -8,8 +12,17 @@ Build.bat
 .last_cover_stats
 Makefile
 Makefile.old
+MANIFEST
 MANIFEST.bak
 META.yml
 MYMETA.yml
 nytprof.out
 pm_to_blib
+_dev/
+logs/development.log
+tmon.out
+cover_db_view
+nytprof
+.DS_Store
+redis-server.log
+dump.rdb

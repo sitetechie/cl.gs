@@ -11,7 +11,9 @@ engines :
     end_tag  : '%]'
 
 cl.gs:
-   cookie: "__clgs"
+   cookie_name: "__clgs"
+   #cookie_expires: Thu, 01-Jan-1971 01:00:00 GMT
+   cookie_expires: 3600
 
 plugins:
     Redis:

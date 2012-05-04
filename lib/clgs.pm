@@ -11,7 +11,7 @@ use List::Util qw/first/;
 use URI;
 use Data::Validate::URI qw(is_web_uri);
 use clgs::Redis;
-#use Data::Dumper;
+use Data::Dumper;
 
 our $VERSION = '0.001';
 
@@ -21,11 +21,28 @@ hook before => sub {
         base       => request->base()->as_string()
     );
     redis->ping();
-    var cookiename => config->{'cl.gs'}{cookie} || '__clgsAA';
-    unless(cookies->{ vars->{cookiename} }) {
-        set_cookie vars->{cookiename} => _gen_visitor_id(request->user_agent);
-                   #expires => (time + 3600),
-                   #domain  => '.foo.com';
+    
+    # check and/or set the cookie
+    var cookiename => config->{'cl.gs'}{cookie_name} || '__clgsAA';
+    
+    my $reset_cookie = 0;
+    my $expires = config->{'cl.gs'}{cookie_expires};
+    if(!$expires) {
+        $expires = (time + 86400 * 90); # 90 days
+    }
+    elsif($expires =~ /^\d+$/) {
+        $expires = (time + $expires);
+        # always set the cookie on relative expiration
+        $reset_cookie++;
+    }
+    
+    my $cn = vars->{cookiename};
+    if(!cookies->{$cn} || $reset_cookie) {
+        my @host = split(':',request->host());
+        set_cookie $cn => (cookies->{$cn} && cookies->{$cn}->value()) || 
+                        _gen_visitor_id(request->user_agent),
+                   expires =>  $expires,
+                   domain => '.' . $host[0];
     }
  };
 
@@ -109,8 +126,9 @@ get qr{^\/(?<code>[A-Za-z0-9]+)$} => sub {
     };        
     vars->{store}->add_visit($code, $entry);
 
-    #return "REDIR TO $redirection <pre>" . Dumper($entry) . '</pre>';
-    redirect $redirection, 307;
+    return defined(params->{debug}) ? 
+        "REDIR TO $redirection <pre>" . Dumper($entry) . '</pre>' :
+        redirect $redirection, 307;
 };
 
 1;
@@ -172,7 +190,29 @@ Configuration can be achieved via a config.yml file or via the set keyword.
 To use the config.yml approach, you will need to install L<YAML>.
 See the L<Dancer> documentation for more information.
 
-The only configurable setting is the cookie name, which defaults to '__clgs'.
+The configurable settings are:
+
+=over 4
+
+=item * cookie_name
+
+Name of the client cookie. Defaults to '__clgs'.
+
+=item * cookie_expires
+
+Either a date (absolute expiration) or number of seconds (relative expiration)
+
+Example:
+
+  clgs:
+    cookie_expires: Thu, 01-Jan-1970 01:00:00 GMT
+
+Defaults to relative 90 days.
+
+#Just comment this setting out to expire cookies at the end of the session (not
+#recommended).
+
+=back
 
 Example config.yml:
 
@@ -181,7 +221,8 @@ Example config.yml:
     log: errors
 
     clgs:
-        cookie: c3RhbXBzMQ
+        cookie_name: c3RhbXBzMQ
+        cookie_expires: 3600
 
 You can alternatively configure the server via the 'set' keyword in the source
 code. This approach does not require a config file.
@@ -195,7 +236,7 @@ code. This approach does not require a config file.
     set show_errors => 1;
 
     set clgs => {
-        cookie => 'c3RhbXBzMQ',
+        cookie_name => 'c3RhbXBzMQ',
     };
 
     dance;

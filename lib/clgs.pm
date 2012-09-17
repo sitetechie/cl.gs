@@ -46,6 +46,14 @@ hook before => sub {
     }
  };
 
+# in case of non-rooted app, set uri_base (for js and css)
+hook 'before_template_render' => sub {
+    my $tokens = shift;
+    if(request->base->path ne '/') {
+        $tokens->{uri_base} = request->base->path;
+    }
+};
+
 sub _gen_visitor_id {
     my $user_agent = shift;
     
@@ -122,7 +130,7 @@ get qr{^\/(?<code>[A-Za-z0-9]+)$} => sub {
         language       => request->header('Accept-Language'),
         target         => $redirection,
         visitor_id     => cookies->{ vars->{cookiename} }->value(),
-        datetime       => DateTime->now()->datetime()
+        #datetime      => DateTime->now()->datetime()
     };        
     vars->{store}->add_visit($code, $entry);
 

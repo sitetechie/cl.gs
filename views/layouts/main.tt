@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <title>cl.gs URL Shortener</title>
-<link href="/css/style.css" rel="stylesheet" type="text/css">
+<link href="[% uri_base %]/css/style.css" rel="stylesheet" type="text/css">
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script id="resultstmpl" type="text/x-dot-template">
 [% INCLUDE results.tt url = '{{!it.url}}', short_url = '{{!it.short_url}}', stats_url = '{{!it.stats_url}}' %]
 </script>
 
-<script src="/javascripts/doT.min.js" type="text/javascript"></script>
+<script src="[% uri_base %]/javascripts/doT.min.js" type="text/javascript"></script>
 <script>
 var template = doT.template(document.getElementById('resultstmpl').text);
 function shorten(url) {

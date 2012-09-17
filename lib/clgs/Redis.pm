@@ -5,8 +5,11 @@ use Moose;
 use MooseX::StrictConstructor;
 use Const::Fast;
 use DateTime;
+use DateTime::Format::ISO8601;
+use DateTime::Format::MySQL;
 use String::Koremutake;
 use JSON ();
+use Redis;
 
 our $VERSION = '0.001';
 
@@ -14,8 +17,9 @@ my $KORE = String::Koremutake->new();
 
 has 'connection' => (
     is       => 'ro',
-    required => 1,
-    isa      => 'Redis'
+    required => 0,
+    isa      => 'Redis',
+    default => sub { Redis->new() }
 );
 
 has 'base' => (
@@ -104,11 +108,25 @@ sub add_visit {
 
     my $redis = $self->connection();    
     
-    #- convert entry to json and publish to queue
+    my $date = $entry->{datetime} ?
+        ($entry->{datetime} =~ /T/ ? 
+            DateTime::Format::ISO8601->parse_datetime( $entry->{datetime}  ) :
+            DateTime::Format::MySQL->parse_datetime( $entry->{datetime}  ))
+      : DateTime->now();
 
+    #- increment redis stats
+
+    my $dayhour = sprintf('%s.%s.%s.%s', $date->year, $date->month, $date->day, $date->hour);
+
+    $redis->hincrby($self->_key_data($short), 'clicks', 1);
+    $redis->hincrby($self->_key_stats($short), $dayhour, 1);
+    
+    #- convert entry to json
+        
     my $log_str;
     eval {
         $entry->{short_code} = $short;
+        $entry->{datetime} ||= $date->datetime();
         $log_str = JSON->new->utf8->encode($entry);
     };
     if($@) {
@@ -116,25 +134,22 @@ sub add_visit {
             id => 0, short_code => $short, error => $@ 
         });
     }
-    
+
+    #- publish json to queue
+
     $redis->publish('cl.gs:visits', $log_str);
 
-    #- increment redis stats
-
-    my $date = DateTime->now();
-    my $dayhour = sprintf('%s.%s.%s.%s', $date->year, $date->month, $date->day, $date->hour);
-    
-    $redis->hincrby($self->_key_data($short), 'clicks', 1);
-    $redis->hincrby($self->_key_stats($short), $dayhour, 1);
+    #- increment sparkline point for today
+    # TODO
     }
 
 sub get_stats {
     my ($self, $short) = @_;
 
-    my $redis = $self->connection();
+    my $redis = $self->connection() or die("Redis disconnected");
 
     my %meta  = $redis->hgetall($self->_key_data($short));
-    die("Invalid short code") unless %meta;
+    die("Invalid short code '$short'") unless %meta;
 
     my $stats = { $redis->hgetall($self->_key_stats($short)) };
     return { code => $short, 'meta' => \%meta, breakdown => $stats };
